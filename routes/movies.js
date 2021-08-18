@@ -91,12 +91,12 @@ app.get(`${ prefix}:id/genre`,
 // afficher la partie Genre des film
 app.get(`${ prefix}cast/:id`,
 (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     let request  =new sql.Request(dbConnect)
-    request.query(`SELECT * FROM cast WHERE IdCast = ${id}`,
+    request.query(`SELECT * FROM Cast WHERE IdCast = ${id}`,
         (err, result) => {
             if(err) console.log(err);
-            else res.send(result.recordset);  // .recordset est pour afficher que la partie recordset
+            else res.send(result.recordset[0]);  // .recordset est pour afficher que la partie recordset
         }
     );
     
@@ -147,10 +147,39 @@ app.get(`${prefix}bygenre/:id`,
  }
 
 
+)      
+
+//------------------------------------------------
+//Date
+
+app.get(`${prefix}year/:id`, 
+ (req, res) => {
+     let id = req.params.id;
+     let request = new sql.Request(dbConnect)
+     request.query(`SELECT IdMovie, Title FROM movie WHERE year(ReleaseDate)= ${id}`,
+     (err, result) => {
+        if(err) console.error(err);
+        else res.send(result.recordset);  // .recordset est pour afficher que la partie recordset
+    })
+ }
+
+
+)              
+app.get(`${prefix}year`, 
+ (req, res) => {
+     let request = new sql.Request(dbConnect)
+     request.query(`SELECT distinct year(ReleaseDate) as year FROM Movie order by year`,
+     (err, result) => {
+        if(err) console.error(err);
+        else res.send(result.recordset);  // .recordset est pour afficher que la partie recordset
+    })
+ }
+
+
 )              
 
 
-
+//------------------------------------------------
 
     //tous les genres
     app.get("/genres", function (req, res) {
@@ -190,6 +219,7 @@ app.get(`${prefix}bygenre/:id`,
             });
     });
     
+    
 // afficher la partie ID
     app.get(`${ prefix}:id`,
     (req, res) => {
@@ -205,6 +235,28 @@ app.get(`${prefix}bygenre/:id`,
         
     }
 );
+
+ // Envoie d'info depuis angular
+app.post(`/Genres/`,(req,res)=>{
+
+    let content = req.body;
+
+    console.log(content);
+
+    let request = new sql.Request(dbConnect);
+
+    request.query(`INSERT INTO Genre OUTPUT inserted.IdGenre VALUES('${content.IdGenre}','${content.Label}')`, (err, result)=>{
+
+        if (err) console.error(err);
+
+        else res.send(result.recordset[0]);
+
+    })
+
+});
 }
+
+
+
 
 module.exports = moviesRoutes
